@@ -3,7 +3,11 @@ project(CHIP8 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_compile_definitions(DEBUG=1)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message("-- Setting debug compile definition to true")
+    add_compile_definitions(DEBUG=1)
+endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS) # Stupid Windows
 
-add_executable(CHIP8 src/main.c src/chip8.c src/chip8.h src/rom.h src/rom.c src/constants.h)
+add_executable(CHIP8 src/main.c src/chip8.c src/rom.c)
