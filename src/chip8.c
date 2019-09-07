@@ -39,6 +39,14 @@ void initialize_machine() {
     cpu.program_counter = CHIP8_ROM_START;
     srand((uint32_t) time(NULL));
     memset(cpu.video, 0, VIDEO_WIDTH * VIDEO_HEIGHT);
+    cpu.video[0] = SCREEN_PIXEL_ON;
+    cpu.video[(VIDEO_WIDTH * VIDEO_HEIGHT - 1)] = SCREEN_PIXEL_ON;
+    cpu.video[VIDEO_WIDTH - 1] = SCREEN_PIXEL_ON;
+    cpu.video[(VIDEO_WIDTH * VIDEO_HEIGHT) - VIDEO_WIDTH] = SCREEN_PIXEL_ON;
+
+    for(int i = 0; i < VIDEO_WIDTH; i++) {
+        cpu.video[2 * VIDEO_WIDTH + i] = 0xFFFFFFFF;
+    }
 }
 
 uint8_t random_byte() {
