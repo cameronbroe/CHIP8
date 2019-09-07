@@ -255,7 +255,7 @@ void op_draw_vx_vy(uint16_t opcode) {
     cpu.registers[0xF] = 0;
 
     for(uint32_t row = 0; row < height; row++) {
-        uint8_t spriteByte = cpu.memory[index + row];
+        uint8_t spriteByte = cpu.memory[cpu.index + row];
 
         for(uint32_t column = 0; column < SPRITE_WIDTH; column++) {
             uint8_t spritePixel = spriteByte & (0b10000000 >> column);
