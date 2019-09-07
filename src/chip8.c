@@ -293,3 +293,112 @@ void op_sknp_vx(uint16_t opcode) {
         cpu.program_counter += 2;
     }
 }
+
+// FX07 -> Set Vx = delay timer value.
+void op_ld_vx_delay(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    cpu.registers[Vx] = cpu.delay_timer;
+}
+
+// FX0A -> Wait for a key press, store the value of the key in Vx.
+void op_ld_vx_key(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    if(cpu.keypad[0x0]) {
+        cpu.registers[Vx] = 0x0;
+    } else if(cpu.keypad[0x1]) {
+        cpu.registers[Vx] = 0x1;
+    } else if(cpu.keypad[0x2]) {
+        cpu.registers[Vx] = 0x2;
+    } else if(cpu.keypad[0x3]) {
+        cpu.registers[Vx] = 0x3;
+    } else if(cpu.keypad[0x4]) {
+        cpu.registers[Vx] = 0x4;
+    } else if(cpu.keypad[0x5]) {
+        cpu.registers[Vx] = 0x5;
+    } else if(cpu.keypad[0x6]) {
+        cpu.registers[Vx] = 0x6;
+    } else if(cpu.keypad[0x7]) {
+        cpu.registers[Vx] = 0x7;
+    } else if(cpu.keypad[0x8]) {
+        cpu.registers[Vx] = 0x8;
+    } else if(cpu.keypad[0x9]) {
+        cpu.registers[Vx] = 0x9;
+    } else if(cpu.keypad[0xA]) {
+        cpu.registers[Vx] = 0xA;
+    } else if(cpu.keypad[0xB]) {
+        cpu.registers[Vx] = 0xB;
+    } else if(cpu.keypad[0xC]) {
+        cpu.registers[Vx] = 0xC;
+    } else if(cpu.keypad[0xD]) {
+        cpu.registers[Vx] = 0xD;
+    } else if(cpu.keypad[0xE]) {
+        cpu.registers[Vx] = 0xE;
+    } else if(cpu.keypad[0xF]) {
+        cpu.registers[Vx] = 0xF;
+    } else {
+        // Go back an instruction
+        cpu.program_counter -= 2;
+    }
+}
+
+// FX15 -> Set delay timer = Vx.
+void op_ld_delay_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    cpu.delay_timer = cpu.registers[Vx];
+}
+
+// FX18 -> Set sound timer = Vx.
+void op_ld_st_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    cpu.sound_timer = cpu.registers[Vx];
+}
+
+// FX1E -> Set I = I + Vx.
+void op_add_index_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    cpu.index = cpu.index + cpu.registers[Vx];
+}
+
+// FX29 -> Set I = location of sprite for digit Vx.
+void op_ld_font_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    uint8_t digit = cpu.registers[Vx];
+    cpu.index = FONTSET_START_ADDRESS + (digit * FONT_CHARACTER_SIZE);
+}
+
+// FX33 -> Store BCD representation of Vx in memory locations I, I+1, and I+2.
+void op_ld_bcd_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+    uint8_t value = cpu.registers[Vx];
+
+    // Insert ones-place
+    cpu.memory[cpu.index + 2] = value % 10;
+    value = value / 10;
+
+    // Insert tens-place
+    cpu.memory[cpu.index + 1] = value % 10;
+    value = value / 10;
+
+    // Insert hundreds-place
+    cpu.memory[cpu.index] = value % 10;
+}
+
+// FX55 -> Store registers V0 through Vx in memory starting at location I.
+void op_ld_index_vx(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+
+    // Loop through registers up to Vx and store their values in memory
+    for(int i = 0; i < Vx; i++) {
+        cpu.memory[cpu.index + i] = cpu.registers[i];
+    }
+}
+
+// FX65 -> Read registers V0 through Vx from memory starting at location I.
+void op_ld_vx_index(uint16_t opcode) {
+    uint8_t Vx = (uint8_t) (opcode >> 8u) & 0x0Fu; // Lowest 4 bits of highest byte
+
+    // Loop through registers up to Vx and read value at I + Vi into Vi
+    for(int i = 0; i < Vx; i++) {
+        cpu.registers[i] = cpu.memory[cpu.index + i];
+    }
+}

@@ -26,6 +26,8 @@ typedef struct {
     uint8_t stack_pointer;
     uint32_t video[VIDEO_WIDTH * VIDEO_HEIGHT];
     uint8_t keypad[16];
+    uint8_t delay_timer;
+    uint8_t sound_timer;
 } chip8_cpu;
 
 void process_cycle();

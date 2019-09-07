@@ -7,6 +7,7 @@
 
 #define FONTSET_SIZE 80u
 #define FONTSET_START_ADDRESS 0x50u
+#define FONT_CHARACTER_SIZE 0x5u
 
 #define CHIP8_ROM_START 0x200u
 
