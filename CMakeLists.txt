@@ -3,4 +3,6 @@ project(CHIP8 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(CHIP8 src/main.c src/chip8.c src/chip8.h)
+add_compile_definitions(DEBUG=1)
+
+add_executable(CHIP8 src/main.c src/chip8.c src/chip8.h src/rom.h src/rom.c src/constants.h)

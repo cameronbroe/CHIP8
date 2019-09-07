@@ -1,0 +1,20 @@
+//
+// Created by cameron on 9/6/2019.
+//
+
+#ifndef CHIP8_CONSTANTS_H
+#define CHIP8_CONSTANTS_H
+
+#define FONTSET_SIZE 80
+#define FONTSET_START_ADDRESS 0x50
+
+#define CHIP8_ROM_START 0x200
+
+#define VIDEO_WIDTH 64
+#define VIDEO_HEIGHT 32
+
+#define MEMORY_SIZE 4096
+#define REGISTER_COUNT 16
+#define STACK_SIZE 16
+
+#endif //CHIP8_CONSTANTS_H
