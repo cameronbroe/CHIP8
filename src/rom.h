@@ -5,9 +5,7 @@
 #ifndef CHIP8_ROM_H
 #define CHIP8_ROM_H
 
-#ifdef _WIN64
-#include <stdint-gcc.h>
-#else
+#ifndef _WIN64
 #include <stdint.h>
 #endif
 

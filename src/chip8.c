@@ -37,7 +37,7 @@ void initialize_font() {
 
 void initialize_machine() {
     cpu.program_counter = CHIP8_ROM_START;
-    srand(time(NULL));
+    srand((uint32_t) time(NULL));
     memset(cpu.video, 0, VIDEO_WIDTH * VIDEO_HEIGHT);
 }
 
@@ -46,9 +46,6 @@ uint8_t random_byte() {
 }
 
 void process_cycle() {
-    uint8_t x, y, n;
-    uint16_t addr;
-
     // Decode get 16-bit opcode from 8-bit memory buffer at program counter
     uint16_t opcode = cpu.memory[cpu.program_counter] << 8u | cpu.memory[cpu.program_counter + 1];
 
