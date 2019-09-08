@@ -38,9 +38,9 @@ uint8_t random_byte();
 // Opcode implementations
 
 // 00E0
-void op_cls();
+void op_cls(uint16_t opcode);
 // 00EE
-void op_ret();
+void op_ret(uint16_t opcode);
 // 1NNN
 void op_jp(uint16_t opcode);
 // 2NNN
@@ -68,7 +68,7 @@ void op_add_vx_vy(uint16_t opcode);
 // 8XY5
 void op_sub_vx_vy(uint16_t opcode);
 // 8XY6
-void op_shr_vx(uint16_t opcode);
+void op_sub_vx_vy(uint16_t opcode);
 // 8XY7
 void op_subn_vx_vy(uint16_t opcode);
 // 8XYE
@@ -105,5 +105,10 @@ void op_ld_bcd_vx(uint16_t opcode);
 void op_ld_index_vx(uint16_t opcode);
 // FX65
 void op_ld_vx_index(uint16_t opcode);
+
+void call_table0(uint16_t opcode);
+void call_table8(uint16_t opcode);
+void call_tableE(uint16_t opcode);
+void call_tableF(uint16_t opcode);
 
 #endif //CHIP8_CHIP8_H

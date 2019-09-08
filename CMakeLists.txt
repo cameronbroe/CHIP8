@@ -17,5 +17,5 @@ find_package(raylib "2.5.0" CONFIG REQUIRED)
 
 include_directories(${raylib_INCLUDE_DIRS})
 
-add_executable(CHIP8 src/main.c src/chip8.c src/rom.c)
+add_executable(CHIP8 src/main.c src/chip8.c src/rom.c src/log.h src/log.c)
 target_link_libraries(CHIP8 ${raylib_LIBRARIES})

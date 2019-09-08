@@ -10,6 +10,14 @@
 #include "chip8.h"
 #include "constants.h"
 
+#include "log.h"
+
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
+typedef void (*opcode_func)(uint16_t);
+
 chip8_cpu cpu;
 
 uint8_t fontset[FONTSET_SIZE] = {
@@ -31,6 +39,13 @@ uint8_t fontset[FONTSET_SIZE] = {
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
+// Call tables for opcodes
+opcode_func table[0xF + 1];
+opcode_func table0[0xE + 1];
+opcode_func table8[0xE + 1];
+opcode_func tableE[0xE + 1];
+opcode_func tableF[0x65 + 1];
+
 void initialize_font() {
     memcpy(cpu.memory + FONTSET_START_ADDRESS, fontset, FONTSET_SIZE);
 }
@@ -39,14 +54,65 @@ void initialize_machine() {
     cpu.program_counter = CHIP8_ROM_START;
     srand((uint32_t) time(NULL));
     memset(cpu.video, 0, VIDEO_WIDTH * VIDEO_HEIGHT);
-    cpu.video[0] = SCREEN_PIXEL_ON;
-    cpu.video[(VIDEO_WIDTH * VIDEO_HEIGHT - 1)] = SCREEN_PIXEL_ON;
-    cpu.video[VIDEO_WIDTH - 1] = SCREEN_PIXEL_ON;
-    cpu.video[(VIDEO_WIDTH * VIDEO_HEIGHT) - VIDEO_WIDTH] = SCREEN_PIXEL_ON;
 
-    for(int i = 0; i < VIDEO_WIDTH; i++) {
-        cpu.video[2 * VIDEO_WIDTH + i] = 0xFFFFFFFF;
-    }
+    // Load up call tables
+    table[0x0] = &call_table0;
+    table[0x1] = &op_jp;
+    table[0x2] = &op_call;
+    table[0x3] = &op_se_vx;
+    table[0x4] = &op_sne_vx;
+    table[0x5] = &op_se_vx_vy;
+    table[0x6] = &op_ld_vx;
+    table[0x7] = &op_add_vx;
+    table[0x8] = &call_table8;
+    table[0x9] = &op_sne_vx_vy;
+    table[0xA] = &op_ld_index_addr;
+    table[0xB] = &op_jp_v0_addr;
+    table[0xC] = &op_rnd_vx;
+    table[0xD] = &op_draw_vx_vy;
+    table[0xE] = &call_tableE;
+    table[0xF] = &call_tableF;
+
+    table0[0x0] = &op_cls;
+    table0[0xE] = &op_ret;
+
+    table8[0x0] = &op_ld_vx_vy;
+    table8[0x1] = &op_or_vx_vy;
+    table8[0x2] = &op_and_vx_vy;
+    table8[0x3] = &op_xor_vx_vy;
+    table8[0x4] = &op_add_vx_vy;
+    table8[0x5] = &op_sub_vx_vy;
+    table8[0x7] = &op_subn_vx_vy;
+    table8[0xE] = &op_shl_vx;
+
+    tableE[0x1] = &op_sknp_vx;
+    tableE[0xE] = &op_skp_vx;
+
+    tableF[0x07] = &op_ld_vx_delay;
+    tableF[0x0A] = &op_ld_vx_key;
+    tableF[0x15] = &op_ld_delay_vx;
+    tableF[0x18] = &op_ld_st_vx;
+    tableF[0x1E] = &op_add_index_vx;
+    tableF[0x29] = &op_ld_font_vx;
+    tableF[0x33] = &op_ld_bcd_vx;
+    tableF[0x55] = &op_ld_index_vx;
+    tableF[0x65] = &op_ld_vx_index;
+}
+
+void call_table0(uint16_t opcode) {
+    (*(table0[opcode & 0xFu]))(opcode);
+}
+
+void call_table8(uint16_t opcode) {
+    (*(table8[opcode & 0xFu]))(opcode);
+}
+
+void call_tableE(uint16_t opcode) {
+    (*(tableE[opcode & 0xFu]))(opcode);
+}
+
+void call_tableF(uint16_t opcode) {
+    (*(tableF[opcode & 0xFFu]))(opcode);
 }
 
 uint8_t random_byte() {
@@ -57,24 +123,47 @@ void process_cycle() {
     // Decode get 16-bit opcode from 8-bit memory buffer at program counter
     uint16_t opcode = cpu.memory[cpu.program_counter] << 8u | cpu.memory[cpu.program_counter + 1];
 
+#ifdef DEBUG
+    log_debug("program_counter: %04x\n", cpu.program_counter);
+    log_debug("opcode: %04x\n", opcode);
+#endif
+
     // Then increment our program counter
     cpu.program_counter += 2;
+
+    // Process decoded opcode
+    (*(table[opcode >> 12u]))(opcode);
+
+    // Decrement delay timer if it's > 0
+    if(cpu.delay_timer > 0) {
+        cpu.delay_timer--;
+    }
+
+    // Decrement sound timer if it's > 0
+    if(cpu.sound_timer > 0) {
+        cpu.sound_timer--;
+    }
 }
 
 // 00E0 -> Clear display
-void op_cls() {
+void op_cls(uint16_t opcode) {
     memset(cpu.video, 0, VIDEO_WIDTH * VIDEO_HEIGHT);
+    log_debug("clearing screen\n");
 }
 
 // 00EE -> Return from subroutine
-void op_ret() {
+void op_ret(uint16_t opcode) {
+    log_debug("stack pointer before ret: %d\n", cpu.stack_pointer);
     cpu.stack_pointer--;
     cpu.program_counter = cpu.stack[cpu.stack_pointer];
+    log_debug("program counter from stack: %04x\n", cpu.program_counter);
+    log_debug("stack pointer after ret: %d\n", cpu.stack_pointer);
 }
 
 // 1NNN -> Jump to address
 void op_jp(uint16_t opcode) {
     uint16_t address = opcode & 0xFFFu; // Get last 3 bytes
+    log_debug("setting PC to addr: %04x\n", address);
     cpu.program_counter = address;
 }
 
@@ -229,13 +318,14 @@ void op_sne_vx_vy(uint16_t opcode) {
 
 // ANNN -> Set index = NNN.
 void op_ld_index_addr(uint16_t opcode) {
-    uint8_t address = opcode & 0xFFFu;
+    uint16_t address = opcode & 0xFFFu;
+    log_debug("setting I to addr: %04x", address);
     cpu.index = address;
 }
 
 // BNNN -> Jump to location NNN + V0.
 void op_jp_v0_addr(uint16_t opcode) {
-    uint8_t address = opcode & 0xFFFu;
+    uint16_t address = opcode & 0xFFFu;
     cpu.program_counter = address + cpu.registers[0x0];
 }
 
@@ -253,9 +343,13 @@ void op_draw_vx_vy(uint16_t opcode) {
     uint8_t Vy = (uint8_t) (opcode >> 4u) & 0x0Fu; // Highest 4 bits of lowest byte
     uint8_t height = opcode & 0x000Fu;
 
+    log_debug("starting draw at (%d, %d)\n", cpu.registers[Vx], cpu.registers[Vy]);
+
     // Using modulus to support wrap around
-    uint8_t xPosition = cpu.registers[Vx] & VIDEO_WIDTH;
-    uint8_t yPosition = cpu.registers[Vy] & VIDEO_HEIGHT;
+    uint8_t xPosition = cpu.registers[Vx] % VIDEO_WIDTH;
+    uint8_t yPosition = cpu.registers[Vy] % VIDEO_HEIGHT;
+
+    log_debug("wrapped position is (%d, %d)\n", xPosition, yPosition);
 
     cpu.registers[0xF] = 0;
 
@@ -273,7 +367,7 @@ void op_draw_vx_vy(uint16_t opcode) {
                     cpu.registers[0xF] = 1;
                 }
 
-                *screenPixel = *screenPixel ^ SCREEN_PIXEL_ON;
+                *screenPixel ^= SCREEN_PIXEL_ON;
             }
         }
     }
