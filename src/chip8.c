@@ -120,6 +120,7 @@ uint8_t random_byte() {
 }
 
 void process_cycle() {
+    log_debug("processed cycle at: %d\n", clock());
     // Decode get 16-bit opcode from 8-bit memory buffer at program counter
     uint16_t opcode = cpu.memory[cpu.program_counter] << 8u | cpu.memory[cpu.program_counter + 1];
 

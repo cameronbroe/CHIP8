@@ -23,6 +23,17 @@ The MinGW compiler is currently the only compiler supported by this project.
 
 Linux has not been tested yet, but probably similar to macOS.
 
+The project uses the CMake build system. I personally use CLion for development on the project.
+
+The project can be built with the following commands (macOS):
+
+```shell script
+mkdir -p build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+```
+
 ## References
 
 This project has used these two articles/pages heavily for references and inspiration

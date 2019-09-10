@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
 
     InitWindow(RAYLIB_WIDTH, RAYLIB_HEIGHT, "CHIP-8");
     SetTargetFPS(60); // 60 frames per second! Helps out with delay and sound timers
+    printf("%d\n", CLOCKS_PER_SEC);
     while(!WindowShouldClose()) {
         process_cycle();
-
         // Keymaps
         if(IsKeyDown(KEY_ONE)) { cpu.keypad[0x1] = 1; }
         if(IsKeyDown(KEY_TWO)) { cpu.keypad[0x2] = 1; }
@@ -77,7 +77,9 @@ int main(int argc, char** argv) {
                     }
                 }
             }
-            DrawFPS(0, 0);
+#ifdef DEBUG
+            DrawFPS(0, 20);
+#endif
         EndDrawing();
     }
     close_logger();
