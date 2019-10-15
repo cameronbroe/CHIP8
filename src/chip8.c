@@ -14,6 +14,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
+#include <sys/time.h>
 #endif
 
 typedef void (*opcode_func)(uint16_t);
@@ -134,15 +135,29 @@ void process_cycle() {
 
     // Process decoded opcode
     (*(table[opcode >> 12u]))(opcode);
+}
 
-    // Decrement delay timer if it's > 0
-    if(cpu.delay_timer > 0) {
-        cpu.delay_timer--;
-    }
-
-    // Decrement sound timer if it's > 0
+void tick_sound_timer() {
     if(cpu.sound_timer > 0) {
+#ifdef DEBUG
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        double time = (now.tv_sec * 1000.0) + (now.tv_usec / 1000.0);
+        log_debug("[%f] ticking sound_timer: %d\n", time, cpu.sound_timer);
+#endif
         cpu.sound_timer--;
+    }
+}
+
+void tick_delay_timer() {
+    if(cpu.delay_timer > 0) {
+#ifdef DEBUG
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        double time = (now.tv_sec * 1000.0) + (now.tv_usec / 1000.0);
+        log_debug("[%f] ticking delay_timer: %d\n", time, cpu.delay_timer);
+#endif
+        cpu.delay_timer--;
     }
 }
 
@@ -320,7 +335,7 @@ void op_sne_vx_vy(uint16_t opcode) {
 // ANNN -> Set index = NNN.
 void op_ld_index_addr(uint16_t opcode) {
     uint16_t address = opcode & 0xFFFu;
-    log_debug("setting I to addr: %04x", address);
+    log_debug("setting I to addr: %04x\n", address);
     cpu.index = address;
 }
 

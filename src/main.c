@@ -3,10 +3,29 @@
 #include "rom.h"
 #include "constants.h"
 #include "log.h"
+#include "timer.h"
 
 #include <raylib.h>
+#include <sys/time.h>
 
 extern chip8_cpu cpu;
+int multiplier = 1;
+
+void increment_multiplier() {
+    if(multiplier < 10) {
+        multiplier++;
+        printf("incrementing multiplier\n");
+        SetTargetFPS(60 * multiplier);
+    }
+}
+
+void decrement_multiplier() {
+    if(multiplier > 1) {
+        multiplier--;
+        printf("decrementing multiplier\n");
+        SetTargetFPS(60 * multiplier);
+    }
+}
 
 int main(int argc, char** argv) {
     if(argc < 2) {
@@ -17,11 +36,14 @@ int main(int argc, char** argv) {
     initialize_font();
     initialize_logger();
 
+    start_delay_timer();
+    start_sound_timer();
+
     char* filename = argv[1];
     load_chip8_rom(filename, cpu.memory + CHIP8_ROM_START);
 
     InitWindow(RAYLIB_WIDTH, RAYLIB_HEIGHT, "CHIP-8");
-    SetTargetFPS(60); // 60 frames per second! Helps out with delay and sound timers
+    SetTargetFPS(60 * multiplier); // 60 frames per second! Helps out with delay and sound timers
     printf("%d\n", CLOCKS_PER_SEC);
     while(!WindowShouldClose()) {
         process_cycle();
@@ -60,6 +82,9 @@ int main(int argc, char** argv) {
         if(IsKeyUp(KEY_C)) { cpu.keypad[0xB] = 0; }
         if(IsKeyUp(KEY_V)) { cpu.keypad[0xF] = 0; }
 
+        if(IsKeyPressed(KEY_RIGHT_BRACKET)) { increment_multiplier(); }
+        if(IsKeyPressed(KEY_LEFT_BRACKET)) { decrement_multiplier(); }
+
         BeginDrawing();
             ClearBackground(BLACK);
             for(int y = 0; y < VIDEO_HEIGHT; y++) {
@@ -82,6 +107,8 @@ int main(int argc, char** argv) {
 #endif
         EndDrawing();
     }
+    stop_delay_timer();
+    stop_sound_timer();
     close_logger();
     return 0;
 }

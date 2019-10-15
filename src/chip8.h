@@ -106,6 +106,9 @@ void op_ld_index_vx(uint16_t opcode);
 // FX65
 void op_ld_vx_index(uint16_t opcode);
 
+void tick_delay_timer();
+void tick_sound_timer();
+
 void call_table0(uint16_t opcode);
 void call_table8(uint16_t opcode);
 void call_tableE(uint16_t opcode);
